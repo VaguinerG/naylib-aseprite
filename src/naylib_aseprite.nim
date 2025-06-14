@@ -303,8 +303,10 @@ type
 ##
 
 type
-  Aseprite* {.importc: "Aseprite", header: raylibasepriteHeader, bycopy.} = object
+  AsepriteObj* = object
     ase* {.importc: "ase".}: ptr ase_t
+  
+  Aseprite* = ref AsepriteObj
     ##  Pointer to the cute_aseprite data.
 
 
@@ -362,10 +364,13 @@ proc raiseRaylibError(msg: string) {.noinline, noreturn.} =
 
 proc unloadAseprite(aseprite: Aseprite) {.cdecl, importc: "UnloadAseprite",
                                         header: raylibasepriteHeader.}
-##  Unloads the aseprite file
 
-proc `=destroy`*(x: Aseprite) =
-  unloadAseprite(x)
+proc `=destroy`*(x: AsepriteObj) =  # Note: sem 'var' e sem '*'
+  echo "=destroy CHAMADO para AsepriteObj"
+  if x.ase != nil and x.ase.mem_ctx != nil:
+    echo "  Liberando recurso único..."
+    var temp = Aseprite(ase: x.ase)
+    unloadAseprite(temp[])
   
 ##  Aseprite functions
 
@@ -456,7 +461,7 @@ proc isAsepriteTagValid*(tag: AsepriteTag): bool {.cdecl,
     importc: "IsAsepriteTagValid", header: raylibasepriteHeader.}
 ##  Check if the given Aseprite tag was loaded successfully
 
-proc updateAsepriteTag*(tag: ptr AsepriteTag) {.cdecl, importc: "UpdateAsepriteTag",
+proc updateAsepriteTag*(tag: var AsepriteTag) {.cdecl, importc: "UpdateAsepriteTag",
     header: raylibasepriteHeader.}
 ##  Update the tag animation frame
 
