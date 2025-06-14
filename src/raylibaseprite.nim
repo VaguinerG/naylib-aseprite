@@ -356,7 +356,7 @@ proc loadAseprite*(fileName: cstring): Aseprite {.cdecl, importc: "LoadAseprite"
     header: raylibasepriteHeader.}
 ##  Load an .aseprite file
 
-proc loadAsepriteFromMemory*(fileData: ptr cuchar; size: cint): Aseprite {.cdecl,
+proc loadAsepriteFromMemory*(fileData: ptr uint8; size: cint): Aseprite {.cdecl,
     importc: "LoadAsepriteFromMemory", header: raylibasepriteHeader.}
 ##  Load an aseprite file from memory
 
