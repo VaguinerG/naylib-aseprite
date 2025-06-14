@@ -1,9 +1,13 @@
 import raylib
-
 from os import parentDir, `/`
+
 const raylibasepriteHeader = currentSourcePath().parentDir()/"raylib-aseprite.h"
 const cute_asepriteHeader = currentSourcePath().parentDir()/"cute_aseprite.h"
-{.passC: "-DCUTE_ASEPRITE_IMPLEMENTATION -DRAYLIB_ASEPRITE_IMPLEMENTATION".}
+
+{.emit: """
+#define RAYLIB_ASEPRITE_IMPLEMENTATION
+#include "raylib-aseprite.h"
+""".}
 ##
 ## 	------------------------------------------------------------------------------
 ## 		Licensing information can be found at the end of the file.
@@ -527,4 +531,3 @@ proc isAsepriteSliceValid*(slice: AsepriteSlice): bool {.cdecl,
 proc genAsepriteSliceDefault*(): AsepriteSlice {.cdecl,
     importc: "GenAsepriteSliceDefault", header: raylibasepriteHeader.}
 ##  Generate empty Aseprite slice data.
-
