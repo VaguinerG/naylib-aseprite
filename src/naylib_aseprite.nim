@@ -303,10 +303,8 @@ type
 ##
 
 type
-  AsepriteObj* = object
+  Aseprite* {.importc: "Aseprite", header: raylibasepriteHeader, bycopy.} = object
     ase* {.importc: "ase".}: ptr ase_t
-  
-  Aseprite* = ref AsepriteObj
     ##  Pointer to the cute_aseprite data.
 
 
@@ -364,13 +362,11 @@ proc raiseRaylibError(msg: string) {.noinline, noreturn.} =
 
 proc unloadAseprite(aseprite: Aseprite) {.cdecl, importc: "UnloadAseprite",
                                         header: raylibasepriteHeader.}
+##  Unloads the aseprite file
 
-proc `=destroy`*(x: AsepriteObj) =  # Note: sem 'var' e sem '*'
-  echo "=destroy CHAMADO para AsepriteObj"
-  if x.ase != nil and x.ase.mem_ctx != nil:
-    echo "  Liberando recurso único..."
-    var temp = Aseprite(ase: x.ase)
-    unloadAseprite(temp[])
+# This destroy is broken
+proc `=destroy`*(x: Aseprite) =
+  unloadAseprite(x)
   
 ##  Aseprite functions
 
