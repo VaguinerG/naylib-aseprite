@@ -350,21 +350,25 @@ type
     ##  The rectangle outer bounds for the slice.
 
 
+##  Private functions
+proc loadAsepriteFromMemoryImpl(fileData: ptr UncheckedArray[uint8], size: int32): Aseprite {.importc: "LoadAsepriteFromMemory", header: raylibasepriteHeader.}
+
 ##  Aseprite functions
 
 proc loadAseprite*(fileName: cstring): Aseprite {.cdecl, importc: "LoadAseprite",
     header: raylibasepriteHeader.}
 ##  Load an .aseprite file
-
-proc loadAsepriteFromMemory*(fileData: ptr uint8; size: cint): Aseprite {.cdecl,
-    importc: "LoadAsepriteFromMemory", header: raylibasepriteHeader.}
-##  Load an aseprite file from memory
+## 
+proc loadAsepriteFromMemory*(fileData: openArray[uint8]): Aseprite =
+  ## Load an aseprite file from memory
+  result = loadAsepriteFromMemoryImpl(cast[ptr UncheckedArray[uint8]](fileData), fileData.len.int32)
+  if not isAsepriteValid(result): raiseRaylibError("Failed to load Aseprite from buffer")
 
 proc isAsepriteValid*(aseprite: Aseprite): bool {.cdecl, importc: "IsAsepriteValid",
     header: raylibasepriteHeader.}
 ##  Check if the given Aseprite was loaded successfully
 
-proc unloadAseprite*(aseprite: Aseprite) {.cdecl, importc: "UnloadAseprite",
+proc unloadAseprite(aseprite: Aseprite) {.cdecl, importc: "UnloadAseprite",
                                         header: raylibasepriteHeader.}
 ##  Unloads the aseprite file
 
@@ -384,27 +388,46 @@ proc getAsepriteHeight*(aseprite: Aseprite): cint {.cdecl,
     importc: "GetAsepriteHeight", header: raylibasepriteHeader.}
 ##  Get the height of the sprite
 
+# Basic version with separate coordinates
 proc drawAseprite*(aseprite: Aseprite; frame: cint; posX: cint; posY: cint; tint: Color) {.
     cdecl, importc: "DrawAseprite", header: raylibasepriteHeader.}
-proc drawAsepriteFlipped*(aseprite: Aseprite; frame: cint; posX: cint; posY: cint;
-                         horizontalFlip: bool; verticalFlip: bool; tint: Color) {.
+
+# Basic version with flip
+proc drawAseprite*(aseprite: Aseprite; frame: cint; posX: cint; posY: cint;
+                  horizontalFlip: bool; verticalFlip: bool; tint: Color) {.
     cdecl, importc: "DrawAsepriteFlipped", header: raylibasepriteHeader.}
-proc drawAsepriteV*(aseprite: Aseprite; frame: cint; position: Vector2; tint: Color) {.
+
+# Version with Vector2
+proc drawAseprite*(aseprite: Aseprite; frame: cint; position: Vector2; tint: Color) {.
     cdecl, importc: "DrawAsepriteV", header: raylibasepriteHeader.}
-proc drawAsepriteVFlipped*(aseprite: Aseprite; frame: cint; position: Vector2;
-                          horizontalFlip: bool; verticalFlip: bool; tint: Color) {.
+
+# Version with Vector2 and flip
+proc drawAseprite*(aseprite: Aseprite; frame: cint; position: Vector2;
+                  horizontalFlip: bool; verticalFlip: bool; tint: Color) {.
     cdecl, importc: "DrawAsepriteVFlipped", header: raylibasepriteHeader.}
-proc drawAsepriteExFlipped*(aseprite: Aseprite; frame: cint; position: Vector2;
-                           rotation: cfloat; scale: cfloat; horizontalFlip: bool;
-                           verticalFlip: bool; tint: Color) {.cdecl,
+
+# Extended version
+proc drawAseprite*(aseprite: Aseprite; frame: cint; position: Vector2;
+                  rotation: cfloat; scale: cfloat; tint: Color) {.cdecl,
+    importc: "DrawAsepriteEx", header: raylibasepriteHeader.}
+
+# Extended version with flip
+proc drawAseprite*(aseprite: Aseprite; frame: cint; position: Vector2;
+                  rotation: cfloat; scale: cfloat; horizontalFlip: bool;
+                  verticalFlip: bool; tint: Color) {.cdecl,
     importc: "DrawAsepriteExFlipped", header: raylibasepriteHeader.}
-proc drawAsepritePro*(aseprite: Aseprite; frame: cint; dest: Rectangle;
-                     origin: Vector2; rotation: cfloat; tint: Color) {.cdecl,
+
+# Pro version
+proc drawAseprite*(aseprite: Aseprite; frame: cint; dest: Rectangle;
+                  origin: Vector2; rotation: cfloat; tint: Color) {.cdecl,
     importc: "DrawAsepritePro", header: raylibasepriteHeader.}
-proc drawAsepriteProFlipped*(aseprite: Aseprite; frame: cint; dest: Rectangle;
-                            origin: Vector2; rotation: cfloat; horizontalFlip: bool;
-                            verticalFlip: bool; tint: Color) {.cdecl,
+
+# Pro version with flip
+proc drawAseprite*(aseprite: Aseprite; frame: cint; dest: Rectangle;
+                  origin: Vector2; rotation: cfloat; horizontalFlip: bool;
+                  verticalFlip: bool; tint: Color) {.cdecl,
     importc: "DrawAsepriteProFlipped", header: raylibasepriteHeader.}
+    
 ##  Aseprite Tag functions
 
 proc loadAsepriteTag*(aseprite: Aseprite; name: cstring): AsepriteTag {.cdecl,
@@ -431,30 +454,46 @@ proc genAsepriteTagDefault*(): AsepriteTag {.cdecl,
     importc: "GenAsepriteTagDefault", header: raylibasepriteHeader.}
 ##  Generate an empty Tag with sane defaults
 
+# Basic version with separate coordinates
 proc drawAsepriteTag*(tag: AsepriteTag; posX: cint; posY: cint; tint: Color) {.cdecl,
-    importc: "DrawAsepriteTag", header: raylibasepriteHeader.}
-proc drawAsepriteTagFlipped*(tag: AsepriteTag; posX: cint; posY: cint;
-                            horizontalFlip: bool; verticalFlip: bool; tint: Color) {.
-    cdecl, importc: "DrawAsepriteTagFlipped", header: raylibasepriteHeader.}
-proc drawAsepriteTagV*(tag: AsepriteTag; position: Vector2; tint: Color) {.cdecl,
-    importc: "DrawAsepriteTagV", header: raylibasepriteHeader.}
-proc drawAsepriteTagVFlipped*(tag: AsepriteTag; position: Vector2;
-                             horizontalFlip: bool; verticalFlip: bool; tint: Color) {.
-    cdecl, importc: "DrawAsepriteTagVFlipped", header: raylibasepriteHeader.}
-proc drawAsepriteTagEx*(tag: AsepriteTag; position: Vector2; rotation: cfloat;
-                       scale: cfloat; tint: Color) {.cdecl,
-    importc: "DrawAsepriteTagEx", header: raylibasepriteHeader.}
-proc drawAsepriteTagExFlipped*(tag: AsepriteTag; position: Vector2; rotation: cfloat;
-                              scale: cfloat; horizontalFlip: bool;
-                              verticalFlip: bool; tint: Color) {.cdecl,
-    importc: "DrawAsepriteTagExFlipped", header: raylibasepriteHeader.}
-proc drawAsepriteTagPro*(tag: AsepriteTag; dest: Rectangle; origin: Vector2;
-                        rotation: cfloat; tint: Color) {.cdecl,
-    importc: "DrawAsepriteTagPro", header: raylibasepriteHeader.}
-proc drawAsepriteTagProFlipped*(tag: AsepriteTag; dest: Rectangle; origin: Vector2;
-                               rotation: cfloat; horizontalFlip: bool;
-                               verticalFlip: bool; tint: Color) {.cdecl,
-    importc: "DrawAsepriteTagProFlipped", header: raylibasepriteHeader.}
+   importc: "DrawAsepriteTag", header: raylibasepriteHeader.}
+
+# Basic version with flip
+proc drawAsepriteTag*(tag: AsepriteTag; posX: cint; posY: cint;
+                    horizontalFlip: bool; verticalFlip: bool; tint: Color) {.
+   cdecl, importc: "DrawAsepriteTagFlipped", header: raylibasepriteHeader.}
+
+# Version with Vector2
+proc drawAsepriteTag*(tag: AsepriteTag; position: Vector2; tint: Color) {.cdecl,
+   importc: "DrawAsepriteTagV", header: raylibasepriteHeader.}
+
+# Version with Vector2 and flip
+proc drawAsepriteTag*(tag: AsepriteTag; position: Vector2;
+                    horizontalFlip: bool; verticalFlip: bool; tint: Color) {.
+   cdecl, importc: "DrawAsepriteTagVFlipped", header: raylibasepriteHeader.}
+
+# Extended version (Ex)
+proc drawAsepriteTag*(tag: AsepriteTag; position: Vector2; rotation: cfloat;
+                    scale: cfloat; tint: Color) {.cdecl,
+   importc: "DrawAsepriteTagEx", header: raylibasepriteHeader.}
+
+# Extended version with flip
+proc drawAsepriteTag*(tag: AsepriteTag; position: Vector2; rotation: cfloat;
+                    scale: cfloat; horizontalFlip: bool;
+                    verticalFlip: bool; tint: Color) {.cdecl,
+   importc: "DrawAsepriteTagExFlipped", header: raylibasepriteHeader.}
+
+# Pro version
+proc drawAsepriteTag*(tag: AsepriteTag; dest: Rectangle; origin: Vector2;
+                    rotation: cfloat; tint: Color) {.cdecl,
+   importc: "DrawAsepriteTagPro", header: raylibasepriteHeader.}
+
+# Pro version with flip
+proc drawAsepriteTag*(tag: AsepriteTag; dest: Rectangle; origin: Vector2;
+                    rotation: cfloat; horizontalFlip: bool;
+                    verticalFlip: bool; tint: Color) {.cdecl,
+   importc: "DrawAsepriteTagProFlipped", header: raylibasepriteHeader.}
+
 proc setAsepriteTagFrame*(tag: ptr AsepriteTag; frameNumber: cint) {.cdecl,
     importc: "SetAsepriteTagFrame", header: raylibasepriteHeader.}
 ##  Sets which frame the tag is currently displaying.
@@ -482,3 +521,6 @@ proc isAsepriteSliceValid*(slice: AsepriteSlice): bool {.cdecl,
 proc genAsepriteSliceDefault*(): AsepriteSlice {.cdecl,
     importc: "GenAsepriteSliceDefault", header: raylibasepriteHeader.}
 ##  Generate empty Aseprite slice data.
+
+proc `=destroy`*(x: Aseprite) =
+  unloadAseprite(x)
