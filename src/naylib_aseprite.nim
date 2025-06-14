@@ -305,7 +305,6 @@ type
 type
   Aseprite* {.importc: "Aseprite", header: raylibasepriteHeader, bycopy.} = object
     ase* {.importc: "ase".}: ptr ase_t
-    ##  Pointer to the cute_aseprite data.
 
 
 ##
@@ -364,9 +363,13 @@ proc unloadAseprite(aseprite: Aseprite) {.cdecl, importc: "UnloadAseprite",
                                         header: raylibasepriteHeader.}
 ##  Unloads the aseprite file
 
-# This destroy is broken
-proc `=destroy`*(x: Aseprite) =
-  unloadAseprite(x)
+var loadedAseprites: seq[ptr ase_t]
+
+proc `=destroy`*(x: var Aseprite) =
+  if x.ase != nil and x.ase in loadedAseprites:
+    unloadAseprite(x)
+    loadedAseprites.delete(loadedAseprites.find(x.ase))
+    x.ase = nil
   
 ##  Aseprite functions
 
@@ -376,12 +379,14 @@ proc isAsepriteValid*(aseprite: Aseprite): bool {.cdecl, importc: "IsAsepriteVal
 ## 
 proc loadAseprite*(fileName: cstring): Aseprite {.cdecl, importc: "LoadAseprite",
     header: raylibasepriteHeader.}
+
 ##  Load an .aseprite file
 ## 
 proc loadAsepriteFromMemory*(fileData: openArray[uint8]): Aseprite =
-  ## Load an aseprite file from memory
   result = loadAsepriteFromMemoryImpl(cast[ptr UncheckedArray[uint8]](fileData), fileData.len.int32)
-  if not isAsepriteValid(result): raiseRaylibError("Failed to load Aseprite from buffer")
+  if not isAsepriteValid(result): 
+    raiseRaylibError("Failed to load Aseprite from buffer")
+  loadedAseprites.add(result.ase)
 
 proc traceAseprite*(aseprite: Aseprite) {.cdecl, importc: "TraceAseprite",
                                        header: raylibasepriteHeader.}
