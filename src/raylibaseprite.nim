@@ -3,7 +3,7 @@ import raylib
 from os import parentDir, `/`
 const raylibasepriteHeader = currentSourcePath().parentDir()/"raylib-aseprite.h"
 const cute_asepriteHeader = currentSourcePath().parentDir()/"cute_aseprite.h"
-{.passC: "-DRAYLIB_ASEPRITE_IMPLEMENTATION -DCUTE_ASEPRITE_IMPLEMENTATION".}
+{.passC: "-DCUTE_ASEPRITE_IMPLEMENTATION -DRAYLIB_ASEPRITE_IMPLEMENTATION".}
 ##
 ## 	------------------------------------------------------------------------------
 ## 		Licensing information can be found at the end of the file.
@@ -353,8 +353,22 @@ type
 ##  Private functions
 proc loadAsepriteFromMemoryImpl(fileData: ptr UncheckedArray[uint8], size: int32): Aseprite {.importc: "LoadAsepriteFromMemory", header: raylibasepriteHeader.}
 
+proc raiseRaylibError(msg: string) {.noinline, noreturn.} =
+  raise newException(RaylibError, msg)
+
+proc unloadAseprite(aseprite: Aseprite) {.cdecl, importc: "UnloadAseprite",
+                                        header: raylibasepriteHeader.}
+##  Unloads the aseprite file
+
+proc `=destroy`*(x: Aseprite) =
+  unloadAseprite(x)
+  
 ##  Aseprite functions
 
+proc isAsepriteValid*(aseprite: Aseprite): bool {.cdecl, importc: "IsAsepriteValid",
+    header: raylibasepriteHeader.}
+##  Check if the given Aseprite was loaded successfully
+## 
 proc loadAseprite*(fileName: cstring): Aseprite {.cdecl, importc: "LoadAseprite",
     header: raylibasepriteHeader.}
 ##  Load an .aseprite file
@@ -363,14 +377,6 @@ proc loadAsepriteFromMemory*(fileData: openArray[uint8]): Aseprite =
   ## Load an aseprite file from memory
   result = loadAsepriteFromMemoryImpl(cast[ptr UncheckedArray[uint8]](fileData), fileData.len.int32)
   if not isAsepriteValid(result): raiseRaylibError("Failed to load Aseprite from buffer")
-
-proc isAsepriteValid*(aseprite: Aseprite): bool {.cdecl, importc: "IsAsepriteValid",
-    header: raylibasepriteHeader.}
-##  Check if the given Aseprite was loaded successfully
-
-proc unloadAseprite(aseprite: Aseprite) {.cdecl, importc: "UnloadAseprite",
-                                        header: raylibasepriteHeader.}
-##  Unloads the aseprite file
 
 proc traceAseprite*(aseprite: Aseprite) {.cdecl, importc: "TraceAseprite",
                                        header: raylibasepriteHeader.}
@@ -522,5 +528,3 @@ proc genAsepriteSliceDefault*(): AsepriteSlice {.cdecl,
     importc: "GenAsepriteSliceDefault", header: raylibasepriteHeader.}
 ##  Generate empty Aseprite slice data.
 
-proc `=destroy`*(x: Aseprite) =
-  unloadAseprite(x)
